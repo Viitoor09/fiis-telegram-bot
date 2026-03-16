@@ -1,0 +1,4 @@
+.env
+*.db
+desktop.ini
+__pycache__/
