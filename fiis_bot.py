@@ -20,12 +20,6 @@ bot = telebot.TeleBot(CHAVE_API)
 
 apihelper.proxy = {'https': 'http://proxy.server:3128'}
 
-session = requests.Session()
-session.proxies = {
-   'http': 'http://proxy.server:3128',
-   'https': 'http://proxy.server:3128',
-}
-
 WATCHLIST = ["MXRF11", "HGLG11", "XPLG11", "KNRI11", "VISC11", "BTLG11", "BTHF11", "CPTS11", "HGBS11", "VGHF11"]
 
 def configurar_comandos():
@@ -62,7 +56,7 @@ def garimpar_oportunidades():
     for ticker in WATCHLIST:
         try:
             ticker_sa = f"{ticker}.SA"
-            f = yf.Ticker(ticker_sa, session=session)
+            f = yf.Ticker(ticker_sa, proxy="http://proxy.server:3128")
             info = f.info
             
             pvp = info.get('priceToBook')
@@ -108,7 +102,7 @@ def gerar_grafico_carteira(ativos_processados):
 
 def buscar_ultimo_dividendo(ticker_sa):
     try:
-        fundo = yf.Ticker(ticker_sa, session=session)
+        fundo = yf.Ticker(ticker_sa, proxy="http://proxy.server:3128")
         dividendos = fundo.dividends
         if not dividendos.empty:
             return dividendos.iloc[-1]
@@ -124,7 +118,7 @@ def consultar_fii_profissional(ticker):
         ticker = ticker.upper().strip()
         ticker_sa = f"{ticker}.SA" if not ticker.endswith(".SA") else ticker
         
-        fundo = yf.Ticker(ticker_sa, session=session)
+        fundo = yf.Ticker(ticker_sa, proxy="http://proxy.server:3128")
         info = fundo.info
 
         if not info or 'regularMarketPrice' not in info and 'currentPrice' not in info:
@@ -171,7 +165,7 @@ def simulador_investimento(ticker, valor_investido):
         ticker = ticker.upper().strip()
         ticker_sa = f"{ticker}.SA" if not ticker.endswith(".SA") else ticker
 
-        fundo = yf.Ticker(ticker_sa, session=session)
+        fundo = yf.Ticker(ticker_sa, proxy="http://proxy.server:3128")
         preco_atual = fundo.info.get('currentPrice') or fundo.info.get('regularMarketPrice')
         ultimo_pago = buscar_ultimo_dividendo(ticker_sa)
 
@@ -234,7 +228,7 @@ def registrar_compra(mensagem):
         user_id = mensagem.from_user.id
 
         ticker_sa = f"{ticker}.SA" if not ticker.endswith(".SA") else ticker
-        fundo = yf.Ticker(ticker_sa, session=session)
+        fundo = yf.Ticker(ticker_sa, proxy="http://proxy.server:3128")
         if not fundo.info or ('regularMarketPrice' not in fundo.info):
             bot.reply_to(mensagem, f"🚫 Ticker {ticker} inválido.")
             return
@@ -286,7 +280,7 @@ def ver_carteira(mensagem):
     for ticker, qtd, preco_med in ativos:
         try:
             ticker_sa = f"{ticker}.SA" if not ticker.endswith(".SA") else ticker
-            f = yf.Ticker(ticker_sa, session=session)
+            f = yf.Ticker(ticker_sa, proxy="http://proxy.server:3128")
             
             info = f.info
             preco_atual = info.get('currentPrice') or info.get('regularMarketPrice')
