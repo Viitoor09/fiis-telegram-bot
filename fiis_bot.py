@@ -52,7 +52,6 @@ def garimpar_oportunidades():
             dy = info.get('dividendYield', 0)
             preco = info.get('currentPrice') or info.get('regularMarketPrice')
 
-            # Critério: P/VP entre 0.70 e 0.99 (Barato, mas não "quebrado")
             if pvp and 0.70 <= pvp < 1.00:
                 oportunidades.append({
                     'ticker': ticker,
@@ -63,7 +62,6 @@ def garimpar_oportunidades():
         except:
             continue
 
-    # Ordena pelos melhores Dividend Yields e pega os 3 primeiros
     oportunidades = sorted(oportunidades, key=lambda x: x['dy'], reverse=True)
     return oportunidades[:3]
 
