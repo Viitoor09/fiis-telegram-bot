@@ -46,24 +46,29 @@ def garimpar_oportunidades():
     
     for ticker in WATCHLIST:
         try:
-            f = yf.Ticker(f"{ticker}.SA")
+            ticker_sa = f"{ticker}.SA"
+            f = yf.Ticker(ticker_sa)
             info = f.info
+            
             pvp = info.get('priceToBook')
-            dy = info.get('dividendYield', 0)
             preco = info.get('currentPrice') or info.get('regularMarketPrice')
+            
+            ultimo_div = buscar_ultimo_dividendo(ticker_sa)
 
-            if pvp and 0.70 <= pvp < 1.00:
+            if pvp and 0.70 <= pvp < 1.05: 
+                dy_mensal = (ultimo_div / preco) * 100 if preco else 0
+                
                 oportunidades.append({
                     'ticker': ticker,
                     'pvp': pvp,
-                    'dy': dy * 100 if dy else 0,
-                    'preco': preco
+                    'preco': preco,
+                    'valor_dividendo': ultimo_div,
+                    'dy_mensal': dy_mensal
                 })
         except:
             continue
 
-    oportunidades = sorted(oportunidades, key=lambda x: x['dy'], reverse=True)
-    return oportunidades[:3]
+    return sorted(oportunidades, key=lambda x: x['dy_mensal'], reverse=True)[:3]
 
 def gerar_grafico_carteira(ativos_processados):
     labels = [item['ticker'] for item in ativos_processados]
@@ -363,23 +368,22 @@ def comando_ajuda(mensagem):
 @bot.message_handler(commands=["oportunidades"])
 def comando_oportunidades(mensagem):
     bot.send_chat_action(mensagem.chat.id, 'typing')
-    bot.reply_to(mensagem, "🔍 Garimpando a bolsa em busca de descontos... Aguarde.")
-    
     tops = garimpar_oportunidades()
     
     if not tops:
-        bot.send_message(mensagem.chat.id, "🧐 No momento não encontrei oportunidades claras nos fundos monitorados.")
+        bot.send_message(mensagem.chat.id, "🧐 Mercado está caro! Não achei bons descontos agora.")
         return
 
-    resposta = "🚀 **TOP 3 OPORTUNIDADES (P/VP < 1)**\n\n"
+    resposta = "🚀 **TOP 3 OPORTUNIDADES DO MOMENTO**\n\n"
     for i, item in enumerate(tops, 1):
         resposta += f"{i}️⃣ **{item['ticker']}**\n"
         resposta += f"💰 Preço: R$ {item['preco']:.2f}\n"
         resposta += f"📉 P/VP: {item['pvp']:.2f}\n"
-        resposta += f"💸 DY Estimado: {item['dy']:.2f}%\n"
+        resposta += f"💵 Paga por cota: R$ {item['valor_dividendo']:.2f}/mês\n"
+        resposta += f"📊 Rendimento: {item['dy_mensal']:.2f}% a.m.\n"
         resposta += "--------------------------\n"
     
-    resposta += "\n⚠️ *Lembre-se: Isso não é recomendação de compra, apenas análise de dados!*"
+    resposta += "\n⚠️ *Dados baseados no último provento pago.*"
     bot.send_message(mensagem.chat.id, resposta, parse_mode="Markdown")
 
 print("🚀 FiisBot Online!")
