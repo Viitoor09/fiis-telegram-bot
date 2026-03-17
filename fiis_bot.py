@@ -4,6 +4,7 @@ import telebot
 import matplotlib.pyplot as plt
 import io
 import yfinance as yf
+from telebot import apihelper
 from telebot import types
 from dotenv import load_dotenv
 
@@ -11,7 +12,8 @@ load_dotenv()
 CHAVE_API = os.getenv("TELEGRAM_TOKEN")
 bot = telebot.TeleBot(CHAVE_API)
 
-WATCHLIST = ["MXRF11", "HGLG11", "XPLG11", "KNRI11", "VISC11", "BTLG11", "BCFF11", "CPTS11", "HGBS11", "VGHF11"]
+apihelper.proxy = {'https': 'http://proxy.server:3128'}
+WATCHLIST = ["MXRF11", "HGLG11", "XPLG11", "KNRI11", "VISC11", "BTLG11", "BTHF11", "CPTS11", "HGBS11", "VGHF11"]
 
 def configurar_comandos():
     comandos = [
@@ -47,7 +49,7 @@ def garimpar_oportunidades():
     for ticker in WATCHLIST:
         try:
             ticker_sa = f"{ticker}.SA"
-            f = yf.Ticker(ticker_sa)
+            f = yf.Ticker(ticker_sa, proxy="http://proxy.server:3128")
             info = f.info
             
             pvp = info.get('priceToBook')
@@ -93,7 +95,7 @@ def gerar_grafico_carteira(ativos_processados):
 
 def buscar_ultimo_dividendo(ticker_sa):
     try:
-        fundo = yf.Ticker(ticker_sa)
+        fundo = yf.Ticker(ticker_sa, proxy="http://proxy.server:3128")
         dividendos = fundo.dividends
         if not dividendos.empty:
             return dividendos.iloc[-1]
