@@ -130,16 +130,29 @@ def consultar_fii_profissional(ticker):
         fundo = yf.Ticker(ticker_sa)
         info = fundo.info
 
-        if not info or 'regularMarketPrice' not in info and 'currentPrice' not in info:
+        if not info or ('regularMarketPrice' not in info and 'currentPrice' not in info):
             return f"❌ Erro: O fundo '{ticker}' não foi encontrado ou não tem dados na B3."
         
+
+        gestora = info.get('fundFamily') or "Não informada"
+        
+        tipo_raw = info.get('industry', 'Não informado')
+        if 'Mortgage' in tipo_raw:
+            tipo = "📄 Papel (CRI/LCI)"
+        elif 'Diversified' in tipo_raw:
+            tipo = "🏢 Híbrido / Diversificado"
+        elif any(x in tipo_raw for x in ['Office', 'Industrial', 'Retail', 'Hotel']):
+            tipo = "🧱 Tijolo"
+        else:
+            tipo = tipo_raw
+            
         preco = info.get('currentPrice') or info.get('regularMarketPrice')
         preco_texto = f"R$ {preco:.2f}" if preco is not None else "Não disponível"
 
         pvp = info.get('priceToBook')
         if pvp is not None:
-            if pvp < 1: status_pvp = "🟢 Descontado (barato)"
-            elif pvp > 1.05: status_pvp = "🔴 Caro (Acima do patrimonial)"
+            if pvp < 1: status_pvp = "🟢 Descontado"
+            elif pvp > 1.05: status_pvp = "🔴 Caro"
             else: status_pvp = "🟡 No preço justo"
             pvp_texto = f"{pvp:.2f} ({status_pvp})"
         else:
@@ -149,20 +162,18 @@ def consultar_fii_profissional(ticker):
         
         dy = info.get('dividendYield')
         dy_formatado = "Não informado"
-
         if dy:
             dy_real = dy if dy > 1 else dy * 100
-            if dy_real > 30:
-                dy_formatado = "Dado instável no Yahoo"
-            else:
-                dy_formatado = f"{dy_real:.2f}%"
+            dy_formatado = f"{dy_real:.2f}%"
         
         return (
             f"--- 📊 RELATÓRIO: {ticker} ---\n"
-            f"💰 Preço Atual: {preco_texto}\n"
-            f"📉 P/VP: {pvp_texto}\n"
-            f"💸 Dividend Yield: {dy_formatado}\n"
-            f"🪙 Último Provento: R$ {ultimo_pago:.2f}\n"
+            f"🏢 **Gestora:** {gestora}\n"
+            f"🏗️ **Tipo:** {tipo}\n"
+            f"💰 **Preço Atual:** {preco_texto}\n"
+            f"📉 **P/VP:** {pvp_texto}\n"
+            f"💸 **Dividend Yield:** {dy_formatado}\n"
+            f"🪙 **Último Provento:** R$ {ultimo_pago:.2f}\n"
             f"----------------------------"
         )
     
