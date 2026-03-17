@@ -425,5 +425,11 @@ def comando_oportunidades(mensagem):
     resposta += "\n⚠️ *Dados baseados no último provento pago.*"
     bot.send_message(mensagem.chat.id, resposta, parse_mode="Markdown")
 
-print("🚀 FiisBot Online!")
-bot.polling()
+if __name__ == "__main__":
+    print("🚀 FiisBot Online!")
+    while True:
+        try:
+            bot.polling(non_stop=True, interval=3, timeout=20)
+        except Exception as e:
+            print(f"⚠️ Erro no polling: {e}")
+            time.sleep(15)
