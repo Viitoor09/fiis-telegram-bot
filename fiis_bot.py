@@ -53,6 +53,11 @@ cursor.execute('''
 ''')
 conexao.commit()
 
+def exibir_carteira_logica(mensagem):
+    user_id = mensagem.from_user.id
+    cursor.execute('SELECT ticker, quantidade, preco_medio FROM carteira WHERE usuario_id = ?', (user_id,))
+    ativos = cursor.fetchall()
+
 def garimpar_oportunidades():
     oportunidades = []
     
@@ -262,11 +267,13 @@ def registrar_compra(mensagem):
 
     except Exception as e:
         bot.reply_to(mensagem, f"⚠️ Erro: {e}")
+
 @bot.message_handler(commands=["carteira"])
 @bot.message_handler(func=lambda m: m.text == '💼 Minha Carteira')
-def ver_carteira(mensagem):
-    ver_carteira(mensagem)
+def carteira_handler(mensagem):
     user_id = mensagem.from_user.id
+    
+    # 1. Busca os dados no Banco
     cursor.execute('SELECT ticker, quantidade, preco_medio FROM carteira WHERE usuario_id = ?', (user_id,))
     ativos = cursor.fetchall()
 
@@ -281,6 +288,7 @@ def ver_carteira(mensagem):
     total_patrimonio = 0
     dados_grafico = []
 
+    # 2. Processa cada ativo buscando no Yahoo Finance
     for ticker, qtd, preco_med in ativos:
         try:
             ticker_sa = f"{ticker}.SA" if not ticker.endswith(".SA") else ticker
@@ -314,12 +322,16 @@ def ver_carteira(mensagem):
             print(f"Erro ao processar {ticker}: {e}")
             texto += f"❌ {ticker}: Erro técnico.\n----------------------\n"
 
+    # 3. Finaliza a mensagem e gera o gráfico
     texto += f"\n📊 **Patrimônio Total: R$ {total_patrimonio:.2f}**"
     texto += f"\n💵 **Total de Dividendos/Mês: R$ {total_proventos:.2f}**"
     
     try:
-        foto_grafico = gerar_grafico_carteira(dados_grafico)
-        bot.send_photo(mensagem.chat.id, foto_grafico, caption=texto, parse_mode="Markdown")
+        if dados_grafico:
+            foto_grafico = gerar_grafico_carteira(dados_grafico)
+            bot.send_photo(mensagem.chat.id, foto_grafico, caption=texto, parse_mode="Markdown")
+        else:
+            bot.send_message(mensagem.chat.id, texto, parse_mode="Markdown")
     except Exception as e:
         bot.send_message(mensagem.chat.id, texto, parse_mode="Markdown")
         print(f"Erro ao gerar gráfico: {e}")
