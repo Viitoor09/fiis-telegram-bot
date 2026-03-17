@@ -111,7 +111,7 @@ def consultar_fii_profissional(ticker):
         ticker = ticker.upper().strip()
         ticker_sa = f"{ticker}.SA" if not ticker.endswith(".SA") else ticker
         
-        fundo = yf.Ticker(ticker_sa)
+        fundo = yf.Ticker(ticker_sa, proxy="http://proxy.server:3128")
         info = fundo.info
 
         if not info or 'regularMarketPrice' not in info and 'currentPrice' not in info:
@@ -273,7 +273,7 @@ def ver_carteira(mensagem):
     for ticker, qtd, preco_med in ativos:
         try:
             ticker_sa = f"{ticker}.SA" if not ticker.endswith(".SA") else ticker
-            f = yf.Ticker(ticker_sa)
+            f = yf.Ticker(ticker_sa, proxy="http://proxy.server:3128")
             
             info = f.info
             preco_atual = info.get('currentPrice') or info.get('regularMarketPrice')
