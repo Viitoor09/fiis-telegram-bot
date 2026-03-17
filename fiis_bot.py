@@ -2,6 +2,7 @@
 import os
 import io
 import sqlite3
+import time
 
 # 2. Bibliotecas de Terceiros (Third Party)
 import requests
@@ -290,6 +291,7 @@ def carteira_handler(mensagem):
 
     # 2. Processa cada ativo buscando no Yahoo Finance
     for ticker, qtd, preco_med in ativos:
+        time.sleep(1.5)
         try:
             ticker_sa = f"{ticker}.SA" if not ticker.endswith(".SA") else ticker
             f = yf.Ticker(ticker_sa)
@@ -401,6 +403,7 @@ def comando_oportunidades(mensagem):
 
     resposta = "🚀 **TOP 3 OPORTUNIDADES DO MOMENTO**\n\n"
     for i, item in enumerate(tops, 1):
+        time.sleep(1.5)
         resposta += f"{i}️⃣ **{item['ticker']}**\n"
         resposta += f"💰 Preço: R$ {item['preco']:.2f}\n"
         resposta += f"📉 P/VP: {item['pvp']:.2f}\n"
