@@ -11,9 +11,12 @@ load_dotenv()
 CHAVE_API = os.getenv("TELEGRAM_TOKEN")
 bot = telebot.TeleBot(CHAVE_API)
 
+WATCHLIST = ["MXRF11", "HGLG11", "XPLG11", "KNRI11", "VISC11", "BTLG11", "BCFF11", "CPTS11", "HGBS11", "VGHF11"]
+
 def configurar_comandos():
     comandos = [
         types.BotCommand("start", "Reiniciar o bot e ver o menu"),
+        types.BotCommand("oportunidades", "Mostra os 3 Fiis com maior potencia de compra"),
         types.BotCommand("ajuda", "Como usar o bot"),
         types.BotCommand("comprar", "Adicionar FII (Ex: /comprar MXRF11 10 9.80)"),
         types.BotCommand("remover", "Remover um ativo da carteira"),
@@ -37,6 +40,32 @@ cursor.execute('''
     )
 ''')
 conexao.commit()
+
+def garimpar_oportunidades():
+    oportunidades = []
+    
+    for ticker in WATCHLIST:
+        try:
+            f = yf.Ticker(f"{ticker}.SA")
+            info = f.info
+            pvp = info.get('priceToBook')
+            dy = info.get('dividendYield', 0)
+            preco = info.get('currentPrice') or info.get('regularMarketPrice')
+
+            # Critério: P/VP entre 0.70 e 0.99 (Barato, mas não "quebrado")
+            if pvp and 0.70 <= pvp < 1.00:
+                oportunidades.append({
+                    'ticker': ticker,
+                    'pvp': pvp,
+                    'dy': dy * 100 if dy else 0,
+                    'preco': preco
+                })
+        except:
+            continue
+
+    # Ordena pelos melhores Dividend Yields e pega os 3 primeiros
+    oportunidades = sorted(oportunidades, key=lambda x: x['dy'], reverse=True)
+    return oportunidades[:3]
 
 def gerar_grafico_carteira(ativos_processados):
     labels = [item['ticker'] for item in ativos_processados]
@@ -332,6 +361,28 @@ def comando_ajuda(mensagem):
     )
     
     bot.send_message(mensagem.chat.id, texto_ajuda, parse_mode="Markdown")
+
+@bot.message_handler(commands=["oportunidades"])
+def comando_oportunidades(mensagem):
+    bot.send_chat_action(mensagem.chat.id, 'typing')
+    bot.reply_to(mensagem, "🔍 Garimpando a bolsa em busca de descontos... Aguarde.")
+    
+    tops = garimpar_oportunidades()
+    
+    if not tops:
+        bot.send_message(mensagem.chat.id, "🧐 No momento não encontrei oportunidades claras nos fundos monitorados.")
+        return
+
+    resposta = "🚀 **TOP 3 OPORTUNIDADES (P/VP < 1)**\n\n"
+    for i, item in enumerate(tops, 1):
+        resposta += f"{i}️⃣ **{item['ticker']}**\n"
+        resposta += f"💰 Preço: R$ {item['preco']:.2f}\n"
+        resposta += f"📉 P/VP: {item['pvp']:.2f}\n"
+        resposta += f"💸 DY Estimado: {item['dy']:.2f}%\n"
+        resposta += "--------------------------\n"
+    
+    resposta += "\n⚠️ *Lembre-se: Isso não é recomendação de compra, apenas análise de dados!*"
+    bot.send_message(mensagem.chat.id, resposta, parse_mode="Markdown")
 
 print("🚀 FiisBot Online!")
 bot.polling()
