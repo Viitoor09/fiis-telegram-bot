@@ -262,9 +262,10 @@ def registrar_compra(mensagem):
 
     except Exception as e:
         bot.reply_to(mensagem, f"⚠️ Erro: {e}")
-
+@bot.message_handler(commands=["carteira"])
 @bot.message_handler(func=lambda m: m.text == '💼 Minha Carteira')
 def ver_carteira(mensagem):
+    ver_carteira(mensagem)
     user_id = mensagem.from_user.id
     cursor.execute('SELECT ticker, quantidade, preco_medio FROM carteira WHERE usuario_id = ?', (user_id,))
     ativos = cursor.fetchall()
