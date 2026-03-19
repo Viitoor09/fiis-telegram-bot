@@ -168,12 +168,12 @@ def consultar_fii_profissional(ticker):
         
         return (
             f"--- 📊 RELATÓRIO: {ticker} ---\n"
-            f"🏢 **Gestora:** {gestora}\n"
-            f"🏗️ **Tipo:** {tipo}\n"
-            f"💰 **Preço Atual:** {preco_texto}\n"
-            f"📉 **P/VP:** {pvp_texto}\n"
-            f"💸 **Dividend Yield:** {dy_formatado}\n"
-            f"🪙 **Último Provento:** R$ {ultimo_pago:.2f}\n"
+            f"🏢 Gestora: {gestora}\n"
+            f"🏗️ Tipo: {tipo}\n"
+            f"💰 Preço Atual: {preco_texto}\n"
+            f"📉 P/VP: {pvp_texto}\n"
+            f"💸 Dividend Yield: {dy_formatado}\n"
+            f"🪙 Último Provento: R$ {ultimo_pago:.2f}\n"
             f"----------------------------"
         )
     
